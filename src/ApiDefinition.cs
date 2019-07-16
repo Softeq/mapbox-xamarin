@@ -52,7 +52,7 @@ namespace MapboxBindingIOS
 
         // -(instancetype _Nonnull)initWithAnnotation:(id<MGLAnnotation> _Nullable)annotation reuseIdentifier:(NSString * _Nullable)reuseIdentifier;
         [Export("initWithAnnotation:reuseIdentifier:")]
-        IntPtr Constructor([NullAllowed] MGLAnnotation annotation, [NullAllowed] string reuseIdentifier);
+        IntPtr Constructor([NullAllowed] IMGLAnnotation annotation, [NullAllowed] string reuseIdentifier);
 
         // -(void)prepareForReuse;
         [Export("prepareForReuse")]
@@ -955,11 +955,11 @@ namespace MapboxBindingIOS
 
         // -(void)showAnnotations:(NSArray<id<MGLAnnotation>> * _Nonnull)annotations animated:(BOOL)animated;
         [Export("showAnnotations:animated:")]
-        void ShowAnnotations(MGLAnnotation[] annotations, bool animated);
+        void ShowAnnotations(IMGLAnnotation[] annotations, bool animated);
 
         // -(void)showAnnotations:(NSArray<id<MGLAnnotation>> * _Nonnull)annotations edgePadding:(UIEdgeInsets)insets animated:(BOOL)animated;
         [Export("showAnnotations:edgePadding:animated:")]
-        void ShowAnnotations(MGLAnnotation[] annotations, UIEdgeInsets insets, bool animated);
+        void ShowAnnotations(IMGLAnnotation[] annotations, UIEdgeInsets insets, bool animated);
 
         // @property (copy, nonatomic) MGLMapCamera * _Nonnull camera;
         [Export("camera", ArgumentSemantic.Copy)]
@@ -1047,28 +1047,28 @@ namespace MapboxBindingIOS
 
         // @property (readonly, nonatomic) NSArray<id<MGLAnnotation>> * _Nullable annotations;
         [NullAllowed, Export("annotations")]
-        MGLAnnotation[] Annotations { get; }
+        IMGLAnnotation[] Annotations { get; }
 
         // -(void)addAnnotation:(id<MGLAnnotation> _Nonnull)annotation;
         [Export("addAnnotation:")]
-        void AddAnnotation(MGLAnnotation annotation);
+        void AddAnnotation(IMGLAnnotation annotation);
 
         // -(void)addAnnotations:(NSArray<id<MGLAnnotation>> * _Nonnull)annotations;
         [Export("addAnnotations:")]
-        void AddAnnotations(MGLAnnotation[] annotations);
+        void AddAnnotations(IMGLAnnotation[] annotations);
 
         // -(void)removeAnnotation:(id<MGLAnnotation> _Nonnull)annotation;
         [Export("removeAnnotation:")]
-        void RemoveAnnotation(MGLAnnotation annotation);
+        void RemoveAnnotation(IMGLAnnotation annotation);
 
         // -(void)removeAnnotations:(NSArray<id<MGLAnnotation>> * _Nonnull)annotations;
         [Export("removeAnnotations:")]
-        void RemoveAnnotations(MGLAnnotation[] annotations);
+        void RemoveAnnotations(IMGLAnnotation[] annotations);
 
         // -(MGLAnnotationView * _Nullable)viewForAnnotation:(id<MGLAnnotation> _Nonnull)annotation;
         [Export("viewForAnnotation:")]
         [return: NullAllowed]
-        MGLAnnotationView ViewForAnnotation(MGLAnnotation annotation);
+        MGLAnnotationView ViewForAnnotation(IMGLAnnotation annotation);
 
         // -(__kindof MGLAnnotationImage * _Nullable)dequeueReusableAnnotationImageWithIdentifier:(NSString * _Nonnull)identifier;
         [Export("dequeueReusableAnnotationImageWithIdentifier:")]
@@ -1080,28 +1080,28 @@ namespace MapboxBindingIOS
 
         // @property (readonly, nonatomic) NSArray<id<MGLAnnotation>> * _Nullable visibleAnnotations;
         [NullAllowed, Export("visibleAnnotations")]
-        MGLAnnotation[] VisibleAnnotations { get; }
+        IMGLAnnotation[] VisibleAnnotations { get; }
 
         // -(NSArray<id<MGLAnnotation>> * _Nullable)visibleAnnotationsInRect:(CGRect)rect;
         [Export("visibleAnnotationsInRect:")]
         [return: NullAllowed]
-        MGLAnnotation[] VisibleAnnotationsInRect(CGRect rect);
+        IMGLAnnotation[] VisibleAnnotationsInRect(CGRect rect);
 
         // @property (copy, nonatomic) NSArray<id<MGLAnnotation>> * _Nonnull selectedAnnotations;
         [Export("selectedAnnotations", ArgumentSemantic.Copy)]
-        MGLAnnotation[] SelectedAnnotations { get; set; }
+        IMGLAnnotation[] SelectedAnnotations { get; set; }
 
         // -(void)selectAnnotation:(id<MGLAnnotation> _Nonnull)annotation animated:(BOOL)animated;
         [Export("selectAnnotation:animated:")]
-        void SelectAnnotation(MGLAnnotation annotation, bool animated);
+        void SelectAnnotation(IMGLAnnotation annotation, bool animated);
 
         // -(void)selectAnnotation:(id<MGLAnnotation> _Nonnull)annotation moveIntoView:(BOOL)moveIntoView animateSelection:(BOOL)animateSelection;
         [Export("selectAnnotation:moveIntoView:animateSelection:")]
-        void SelectAnnotation(MGLAnnotation annotation, bool moveIntoView, bool animateSelection);
+        void SelectAnnotation(IMGLAnnotation annotation, bool moveIntoView, bool animateSelection);
 
         // -(void)deselectAnnotation:(id<MGLAnnotation> _Nullable)annotation animated:(BOOL)animated;
         [Export("deselectAnnotation:animated:")]
-        void DeselectAnnotation([NullAllowed] MGLAnnotation annotation, bool animated);
+        void DeselectAnnotation([NullAllowed] IMGLAnnotation annotation, bool animated);
 
         // @property (readonly, nonatomic) NSArray<id<MGLOverlay>> * _Nonnull overlays;
         [Export("overlays")]
@@ -1311,7 +1311,7 @@ namespace MapboxBindingIOS
         // @optional -(MGLAnnotationImage * _Nullable)mapView:(MGLMapView * _Nonnull)mapView imageForAnnotation:(id<MGLAnnotation> _Nonnull)annotation;
         [Export("mapView:imageForAnnotation:")]
         [return: NullAllowed]
-        MGLAnnotationImage MapView_ImageForAnnotation(MGLMapView mapView, MGLAnnotation annotation);
+        MGLAnnotationImage MapView_ImageForAnnotation(MGLMapView mapView, IMGLAnnotation annotation);
 
         // @optional -(CGFloat) mapView:(MGLMapView* _Nonnull) mapView alphaForShapeAnnotation:(MGLShape* _Nonnull) annotation;
         [Export("mapView:alphaForShapeAnnotation:")]
@@ -1332,7 +1332,7 @@ namespace MapboxBindingIOS
         // @optional -(MGLAnnotationView * _Nullable)mapView:(MGLMapView * _Nonnull)mapView viewForAnnotation:(id<MGLAnnotation> _Nonnull)annotation;
         [Export("mapView:viewForAnnotation:")]
         [return: NullAllowed]
-        MGLAnnotationView MapView_ViewForAnnotation(MGLMapView mapView, MGLAnnotation annotation);
+        MGLAnnotationView MapView_ViewForAnnotation(MGLMapView mapView, IMGLAnnotation annotation);
 
         // @optional - (void)mapView:(MGLMapView *)mapView didAddAnnotationViews:(NSArray<MGLAnnotationView *> *)annotationViews;
         [Export("mapView:didAddAnnotationViews:")]
@@ -1344,11 +1344,11 @@ namespace MapboxBindingIOS
 
         // @optional -(void)mapView:(MGLMapView * _Nonnull)mapView didSelectAnnotation:(id<MGLAnnotation> _Nonnull)annotation;
         [Export("mapView:didSelectAnnotation:")]
-        void MapViewDidSelectAnnotation(MGLMapView mapView, MGLAnnotation annotation);
+        void MapViewDidSelectAnnotation(MGLMapView mapView, IMGLAnnotation annotation);
 
         // @optional -(void)mapView:(MGLMapView * _Nonnull)mapView didDeselectAnnotation:(id<MGLAnnotation> _Nonnull)annotation;
         [Export("mapView:didDeselectAnnotation:")]
-        void MapViewDidDeselectAnnotation(MGLMapView mapView, MGLAnnotation annotation);
+        void MapViewDidDeselectAnnotation(MGLMapView mapView, IMGLAnnotation annotation);
 
         // @optional -(void)mapView:(MGLMapView * _Nonnull)mapView didSelectAnnotationView:(MGLAnnotationView * _Nonnull)annotationView;
         [Export("mapView:didSelectAnnotationView:")]
@@ -1360,30 +1360,30 @@ namespace MapboxBindingIOS
 
         // @optional -(BOOL)mapView:(MGLMapView * _Nonnull)mapView annotationCanShowCallout:(id<MGLAnnotation> _Nonnull)annotation;
         [Export("mapView:annotationCanShowCallout:")]
-        bool MapView_AnnotationCanShowCallout(MGLMapView mapView, MGLAnnotation annotation);
+        bool MapView_AnnotationCanShowCallout(MGLMapView mapView, IMGLAnnotation annotation);
 
         // @optional -(id<MGLCalloutView> _Nullable)mapView:(MGLMapView * _Nonnull)mapView calloutViewForAnnotation:(id<MGLAnnotation> _Nonnull)annotation;
         [Export("mapView:calloutViewForAnnotation:")]
         [return: NullAllowed]
-        MGLCalloutView MapView_CalloutViewForAnnotation(MGLMapView mapView, MGLAnnotation annotation);
+        MGLCalloutView MapView_CalloutViewForAnnotation(MGLMapView mapView, IMGLAnnotation annotation);
 
         // @optional -(UIView * _Nullable)mapView:(MGLMapView * _Nonnull)mapView leftCalloutAccessoryViewForAnnotation:(id<MGLAnnotation> _Nonnull)annotation;
         [Export("mapView:leftCalloutAccessoryViewForAnnotation:")]
         [return: NullAllowed]
-        UIView MapView_LeftCalloutAccessoryViewForAnnotation(MGLMapView mapView, MGLAnnotation annotation);
+        UIView MapView_LeftCalloutAccessoryViewForAnnotation(MGLMapView mapView, IMGLAnnotation annotation);
 
         // @optional -(UIView * _Nullable)mapView:(MGLMapView * _Nonnull)mapView rightCalloutAccessoryViewForAnnotation:(id<MGLAnnotation> _Nonnull)annotation;
         [Export("mapView:rightCalloutAccessoryViewForAnnotation:")]
         [return: NullAllowed]
-        UIView MapView_RightCalloutAccessoryViewForAnnotation(MGLMapView mapView, MGLAnnotation annotation);
+        UIView MapView_RightCalloutAccessoryViewForAnnotation(MGLMapView mapView, IMGLAnnotation annotation);
 
         // @optional -(void)mapView:(MGLMapView * _Nonnull)mapView annotation:(id<MGLAnnotation> _Nonnull)annotation calloutAccessoryControlTapped:(UIControl * _Nonnull)control;
         [Export("mapView:annotation:calloutAccessoryControlTapped:")]
-        void MapView_CalloutAccessoryControlTapped(MGLMapView mapView, MGLAnnotation annotation, UIControl control);
+        void MapView_CalloutAccessoryControlTapped(MGLMapView mapView, IMGLAnnotation annotation, UIControl control);
 
         // @optional -(void)mapView:(MGLMapView * _Nonnull)mapView tapOnCalloutForAnnotation:(id<MGLAnnotation> _Nonnull)annotation;
         [Export("mapView:tapOnCalloutForAnnotation:")]
-        void MapView_TapOnCalloutForAnnotation(MGLMapView mapView, MGLAnnotation annotation);
+        void MapView_TapOnCalloutForAnnotation(MGLMapView mapView, IMGLAnnotation annotation);
     }
 
     // @protocol MGLOfflineRegion <NSObject>
@@ -1408,7 +1408,7 @@ namespace MapboxBindingIOS
     {
         // @property (readonly, nonatomic) id<MGLOfflineRegion> _Nonnull region;
         [Export("region")]
-        MGLOfflineRegion Region { get; }
+        IMGLOfflineRegion Region { get; }
 
         // @property (readonly, nonatomic) NSData * _Nonnull context;
         [Export("context")]
@@ -1615,7 +1615,7 @@ namespace MapboxBindingIOS
 
         // -(void)addPackForRegion:(id<MGLOfflineRegion> _Nonnull)region withContext:(NSData * _Nonnull)context completionHandler:(MGLOfflinePackAdditionCompletionHandler _Nullable)completion;
         [Export("addPackForRegion:withContext:completionHandler:")]
-        void AddPackForRegion(MGLOfflineRegion region, NSData context, [NullAllowed] MGLOfflinePackAdditionCompletionHandler completion);
+        void AddPackForRegion(IMGLOfflineRegion region, NSData context, [NullAllowed] MGLOfflinePackAdditionCompletionHandler completion);
 
         // -(void)removePack:(MGLOfflinePack * _Nonnull)pack withCompletionHandler:(MGLOfflinePackRemovalCompletionHandler _Nullable)completion;
         [Export("removePack:withCompletionHandler:")]
@@ -3022,7 +3022,7 @@ namespace MapboxBindingIOS
 
         // -(instancetype _Nonnull)initWithIdentifier:(NSString * _Nonnull)identifier dataSource:(id<MGLComputedShapeSourceDataSource> _Nonnull)dataSource options:(NSDictionary<MGLShapeSourceOption,id> * _Nullable)options;
         [Export("initWithIdentifier:dataSource:options:")]
-        IntPtr Constructor(string identifier, MGLComputedShapeSourceDataSource dataSource, [NullAllowed] NSDictionary<NSString, NSObject> options);
+        IntPtr Constructor(string identifier, IMGLComputedShapeSourceDataSource dataSource, [NullAllowed] NSDictionary<NSString, NSObject> options);
 
         // -(void)invalidateBounds:(MGLCoordinateBounds)bounds;
         [Export("invalidateBounds:")]
@@ -3038,7 +3038,7 @@ namespace MapboxBindingIOS
 
         // @property (nonatomic, weak) id<MGLComputedShapeSourceDataSource> _Nullable dataSource;
         [NullAllowed, Export("dataSource", ArgumentSemantic.Weak)]
-        MGLComputedShapeSourceDataSource DataSource { get; set; }
+        IMGLComputedShapeSourceDataSource DataSource { get; set; }
 
         // @property (readonly, nonatomic) NSOperationQueue * _Nonnull requestQueue;
         [Export("requestQueue")]

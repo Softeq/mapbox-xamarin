@@ -14,12 +14,10 @@ namespace MapBoxSampleIOS
         {
             base.ViewDidLoad();
 
-            MGLAccountManager.AccessToken = @"insert";
+            //MGLAccountManager.AccessToken = @"";
 
             var mapView = new MGLMapView(
-               View.Bounds,
-               new NSUrl("mapbox://styles/naxamtest/cj5kin5x21li42soxdx3mb1yt")
-           );
+               View.Bounds );
             this.View.AddSubview(mapView);
             mapView.WeakDelegate = this;
 
@@ -32,7 +30,7 @@ namespace MapBoxSampleIOS
                 Coordinate = new CLLocationCoordinate2D(21.0276, 105.8355)
             };
 
-            mapView.AddAnnotation((MGLAnnotation)temple);
+            mapView.AddAnnotation(temple);
 
             var newLayer = new MGLSymbolStyleLayer(Guid.NewGuid().ToString(), new MGLSource("xxx"))
             {
