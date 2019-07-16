@@ -5,7 +5,7 @@ using CoreLocation;
 using Foundation;
 using ObjCRuntime;
 
-namespace Mapbox
+namespace MapboxBindingIOS
 {
     [Native]
     public enum MGLAnnotationViewDragState : ulong

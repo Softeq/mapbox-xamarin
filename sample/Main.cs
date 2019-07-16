@@ -1,6 +1,6 @@
 ﻿using UIKit;
 
-namespace sample
+namespace MapBoxSampleIOS
 {
     public class Application
     {

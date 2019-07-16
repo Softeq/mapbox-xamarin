@@ -9,7 +9,7 @@ using System;
 using System.CodeDom.Compiler;
 using UIKit;
 
-namespace sample
+namespace MapBoxSampleIOS
 {
     [Register("ViewController")]
     partial class ViewController
