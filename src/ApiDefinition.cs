@@ -10,25 +10,25 @@ using UIKit;
 
 namespace MapboxBindingIOS
 {
-    ////@protocol MGLAnnotation <NSObject>
-    //public partial interface IMGLAnnotation { }
-    ////@protocol MGLCalloutView <NSObject>
-    //public partial interface IMGLCalloutView { }
-    ////@protocol MGLCalloutViewDelegate <NSObject>
-    //public partial interface IMGLCalloutViewDelegate { }
-    ////@protocol MGLFeature <MGLAnnotation>
-    //public partial interface IMGLFeature { }
-    ////@protocol MGLMapViewDelegate <NSObject>
-    //public partial interface IMGLMapViewDelegate { }
-    ////@protocol MGLOfflineRegion <NSObject>
-    //public partial interface IMGLOfflineRegion { }
-    ////@protocol MGLOverlay <MGLAnnotation>
+    //@protocol MGLAnnotation <NSObject>
+    public partial interface IMGLAnnotation { }
+    //@protocol MGLCalloutView <NSObject>
+    public partial interface IMGLCalloutView { }
+    //@protocol MGLCalloutViewDelegate <NSObject>
+    public partial interface IMGLCalloutViewDelegate { }
+    //@protocol MGLFeature <MGLAnnotation>
+    public partial interface IMGLFeature { }
+    //@protocol MGLMapViewDelegate <NSObject>
+    public partial interface IMGLMapViewDelegate { }
+    //@protocol MGLOfflineRegion <NSObject>
+    public partial interface IMGLOfflineRegion { }
+    //@protocol MGLOverlay <MGLAnnotation>
     public partial interface IMGLOverlay { }
-    //public partial interface IMGLOfflineStorageDelegate { }
-    ////@protocol MGLLocationManagerDelegate;
-    //public partial interface IMGLLocationManagerDelegate { }
-    ////@protocol MGLComputedShapeSourceDataSource<NSObject>
-    //public partial interface IMGLComputedShapeSourceDataSource { }
+    public partial interface IMGLOfflineStorageDelegate { }
+    //@protocol MGLLocationManagerDelegate;
+    public partial interface IMGLLocationManagerDelegate { }
+    //@protocol MGLComputedShapeSourceDataSource<NSObject>
+    public partial interface IMGLComputedShapeSourceDataSource { }
 
     [Static]
     partial interface MapboxVersion
@@ -330,13 +330,13 @@ namespace MapboxBindingIOS
         [return: NullAllowed]
         MGLShape ShapeWithData(NSData data, nuint encoding, [NullAllowed] out NSError outError);
 
-        // @property (copy, nonatomic) NSString * _Nullable title;
-        //[NullAllowed, Export("title")]
-        //string Title { get; set; }
+        //@property(copy, nonatomic) NSString* _Nullable title;
+        [NullAllowed, Export("title")]
+        string Title { get; set; }
 
-        // @property (copy, nonatomic) NSString * _Nullable subtitle;
-        //[NullAllowed, Export("subtitle")]
-        //string Subtitle { get; set; }
+        //@property(copy, nonatomic) NSString* _Nullable subtitle;
+        [NullAllowed, Export("subtitle")]
+        string Subtitle { get; set; }
 
         // -(NSData * _Nonnull)geoJSONDataUsingEncoding:(NSStringEncoding)encoding;
         [Export("geoJSONDataUsingEncoding:")]

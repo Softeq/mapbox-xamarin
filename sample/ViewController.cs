@@ -14,21 +14,31 @@ namespace MapBoxSampleIOS
         {
             base.ViewDidLoad();
 
-            MGLAccountManager.AccessToken = @"pk.eyJ1Ijoid2hhdHN1cDEwMjkiLCJhIjoiY2pycnlidWh6MDM5YTN5dGN0ZTl6dWYwdCJ9.lAT_WwGQug0vz-ball4t1Q";
+            MGLAccountManager.AccessToken = @"insert";
 
-            var mapView = new MGLMapView(View.Bounds, new NSUrl("mapbox://styles/mapbox/light-v9"))
+            var mapView = new MGLMapView(
+               View.Bounds,
+               new NSUrl("mapbox://styles/naxamtest/cj5kin5x21li42soxdx3mb1yt")
+           );
+            this.View.AddSubview(mapView);
+            mapView.WeakDelegate = this;
+
+            mapView.SetCenterCoordinate(new CLLocationCoordinate2D(21.028511, 105.804817), 11, false);
+
+            var temple = new MGLPointAnnotation
             {
-                WeakDelegate = this
+                Title = "Temple of literature",
+                Subtitle = "Van Mieu - Quoc Tu Giam",
+                Coordinate = new CLLocationCoordinate2D(21.0276, 105.8355)
             };
 
-            var center = new CLLocationCoordinate2D(29.7604, -95.3698);
+            mapView.AddAnnotation((MGLAnnotation)temple);
 
-            mapView.SetCenterCoordinate(center, zoomLevel: 8, direction: 0, animated: false);
-
-            mapView.MinimumZoomLevel = 8;
-            mapView.MaximumZoomLevel = 15;
-
-            View.AddSubview(mapView);
+            var newLayer = new MGLSymbolStyleLayer(Guid.NewGuid().ToString(), new MGLSource("xxx"))
+            {
+                IconImageName = NSExpression.FromConstant(new NSString("temple")),
+                IconOpacity = NSExpression.FromConstant(NSNumber.FromDouble(0.7))
+            };
         }
     }
 }
