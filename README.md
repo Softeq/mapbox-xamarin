@@ -1,5 +1,7 @@
 # Mapbox Maps SDK for Xamarin.iOS
 
+[![Build status](https://dev.azure.com/SofteqDevelopment/mapbox-xamarin/_apis/build/status/Build%20master%20branch)](https://dev.azure.com/SofteqDevelopment/mapbox-xamarin/_build/latest?definitionId=57)
+
 Xamarin binding library for [Mapbox GL Native](https://github.com/mapbox/mapbox-gl-native) library v5.1.1.
 
 ![](https://github.com/mapbox/mapbox-gl-native/raw/master/platform/ios/docs/img/screenshot.png)
