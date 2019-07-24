@@ -6,14 +6,6 @@ Xamarin binding library for [Mapbox GL Native](https://github.com/mapbox/mapbox-
 
 ![](https://github.com/mapbox/mapbox-gl-native/raw/master/platform/ios/docs/img/screenshot.png)
 
-## Installation
-
-NuGet:
-
-```
-Install-Package ...
-```
-
 ## Basic Examples
 
 See our [demo project](/sample) for examples.
