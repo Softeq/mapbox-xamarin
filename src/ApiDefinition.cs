@@ -60,7 +60,7 @@ namespace MapboxBindingIOS
 
         // @property (nonatomic) id<MGLAnnotation> _Nullable annotation;
         [NullAllowed, Export("annotation", ArgumentSemantic.Assign)]
-        MGLAnnotation Annotation { get; set; }
+        IMGLAnnotation Annotation { get; set; }
 
         // @property (readonly, nonatomic) NSString * _Nullable reuseIdentifier;
         [NullAllowed, Export("reuseIdentifier")]
