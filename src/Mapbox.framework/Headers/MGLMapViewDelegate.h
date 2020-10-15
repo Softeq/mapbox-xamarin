@@ -6,6 +6,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @class MGLMapView;
+@class MGLUserLocationAnnotationViewStyle;
 
 /**
  The `MGLMapViewDelegate` protocol defines a set of optional methods that you
@@ -277,6 +278,20 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (nullable UIImage *)mapView:(MGLMapView *)mapView didFailToLoadImage:(NSString *)imageName;
 
+/**
+ Asks the delegate whether the map view should evict cached images.
+ 
+ This method is called in two scenarios: when the cumulative size of unused images
+ exceeds the cache size or when the last tile that includes the image is removed from
+ memory.
+ 
+ @param mapView The map view that is evicting the image.
+ @param imageName The image name that is going to be removed.
+ @return A Boolean value indicating whether the map view should evict
+ the cached image.
+ */
+- (BOOL)mapView:(MGLMapView *)mapView shouldRemoveStyleImage:(NSString *)imageName;
+
 #pragma mark Tracking User Location
 
 /**
@@ -298,6 +313,17 @@ NS_ASSUME_NONNULL_BEGIN
  @param mapView The map view that is tracking the user’s location.
  */
 - (void)mapViewDidStopLocatingUser:(MGLMapView *)mapView;
+
+/**
+ Asks the delegate styling options for each default user location annotation view.
+ 
+ This method is called many times during gesturing, so you should avoid performing
+ complex or performance-intensive tasks in your implementation.
+ 
+ @param mapView The map view that is tracking the user’s location.
+ */
+- (MGLUserLocationAnnotationViewStyle *)mapViewStyleForDefaultUserLocationAnnotationView:(MGLMapView *)mapView NS_SWIFT_NAME(mapView(styleForDefaultUserLocationAnnotationView:));
+
 
 /**
  Tells the delegate that the location of the user was updated.
@@ -353,6 +379,18 @@ NS_ASSUME_NONNULL_BEGIN
  @param mapView The map view that is tracking the user's location.
  */
 - (CGPoint)mapViewUserLocationAnchorPoint:(MGLMapView *)mapView;
+
+/**
+ Tells the delegate that the map's location updates accuracy authorization has changed.
+ 
+ This method is called after the user changes location accuracy authorization when
+ requesting location permissions or in privacy settings.
+ 
+ @param mapView The map view that changed its location accuracy authorization.
+ @param manager The location manager reporting the update.
+ 
+ */
+- (void)mapView:(MGLMapView *)mapView didChangeLocationManagerAuthorization:(id<MGLLocationManager>)manager API_AVAILABLE(ios(14));
 
 #pragma mark Managing the Appearance of Annotations
 

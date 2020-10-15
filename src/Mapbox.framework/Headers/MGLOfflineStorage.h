@@ -18,8 +18,8 @@ NS_ASSUME_NONNULL_BEGIN
 
  The `object` is the `MGLOfflinePack` object whose progress changed. The
  `userInfo` dictionary contains the pack’s current state in the
- `MGLOfflinePackStateUserInfoKey` key and details about the pack’s current
- progress in the `MGLOfflinePackProgressUserInfoKey` key. You may also consult
+ `MGLOfflinePackUserInfoKeyState` key and details about the pack’s current
+ progress in the `MGLOfflinePackUserInfoKeyProgress` key. You may also consult
  the `MGLOfflinePack.state` and `MGLOfflinePack.progress` properties, which
  provide the same values.
 
@@ -43,7 +43,7 @@ FOUNDATION_EXTERN MGL_EXPORT const NSNotificationName MGLOfflinePackProgressChan
 
  The `object` is the `MGLOfflinePack` object that encountered the error. The
  `userInfo` dictionary contains the error object in the
- `MGLOfflinePackErrorUserInfoKey` key.
+ `MGLOfflinePackUserInfoKeyError` key.
  */
 FOUNDATION_EXTERN MGL_EXPORT const NSNotificationName MGLOfflinePackErrorNotification;
 
@@ -53,12 +53,11 @@ FOUNDATION_EXTERN MGL_EXPORT const NSNotificationName MGLOfflinePackErrorNotific
 
  The `object` is the `MGLOfflinePack` object that reached the tile limit in the
  course of downloading. The `userInfo` dictionary contains the tile limit in the
- `MGLOfflinePackMaximumCountUserInfoKey` key.
+ `MGLOfflinePackUserInfoKeyMaximumCount` key.
 
  Once this limit is reached, no instance of `MGLOfflinePack` can download
  additional tiles from Mapbox APIs until already downloaded tiles are removed by
  calling the `-[MGLOfflineStorage removePack:withCompletionHandler:]` method.
- Contact your Mapbox sales representative to have the limit raised.
  */
 FOUNDATION_EXTERN MGL_EXPORT const NSNotificationName MGLOfflinePackMaximumMapboxTilesReachedNotification;
 
@@ -75,8 +74,6 @@ typedef NSString *MGLOfflinePackUserInfoKey NS_EXTENSIBLE_STRING_ENUM;
  */
 FOUNDATION_EXTERN MGL_EXPORT const MGLOfflinePackUserInfoKey MGLOfflinePackUserInfoKeyState;
 
-FOUNDATION_EXTERN MGL_EXPORT NSString * const MGLOfflinePackStateUserInfoKey __attribute__((unavailable("Use MGLOfflinePackUserInfoKeyState")));
-
 /**
  The key for an `NSValue` object that indicates an offline pack’s current
  progress. This key is used in the `userInfo` dictionary of an
@@ -86,8 +83,6 @@ FOUNDATION_EXTERN MGL_EXPORT NSString * const MGLOfflinePackStateUserInfoKey __a
  */
 FOUNDATION_EXTERN MGL_EXPORT const MGLOfflinePackUserInfoKey MGLOfflinePackUserInfoKeyProgress;
 
-FOUNDATION_EXTERN MGL_EXPORT NSString * const MGLOfflinePackProgressUserInfoKey __attribute__((unavailable("Use MGLOfflinePackUserInfoKeyProgress")));
-
 /**
  The key for an `NSError` object that is encountered in the course of
  downloading an offline pack. This key is used in the `userInfo` dictionary of
@@ -95,8 +90,6 @@ FOUNDATION_EXTERN MGL_EXPORT NSString * const MGLOfflinePackProgressUserInfoKey 
  `MGLErrorDomain`. See `MGLErrorCode` for possible error codes.
  */
 FOUNDATION_EXTERN MGL_EXPORT const MGLOfflinePackUserInfoKey MGLOfflinePackUserInfoKeyError;
-
-FOUNDATION_EXTERN MGL_EXPORT NSString * const MGLOfflinePackErrorUserInfoKey __attribute__((unavailable("Use MGLOfflinePackUserInfoKeyError")));
 
 /**
  The key for an `NSNumber` object that indicates the maximum number of
@@ -107,8 +100,6 @@ FOUNDATION_EXTERN MGL_EXPORT NSString * const MGLOfflinePackErrorUserInfoKey __a
  limit.
  */
 FOUNDATION_EXTERN MGL_EXPORT const MGLOfflinePackUserInfoKey MGLOfflinePackUserInfoKeyMaximumCount;
-
-FOUNDATION_EXTERN MGL_EXPORT NSString * const MGLOfflinePackMaximumCountUserInfoKey __attribute__((unavailable("Use MGLOfflinePackUserInfoKeyMaximumCount")));
 
 FOUNDATION_EXTERN MGL_EXPORT MGLExceptionName const MGLUnsupportedRegionTypeException;
 
@@ -152,6 +143,15 @@ typedef void (^MGLOfflinePackRemovalCompletionHandler)(NSError * _Nullable error
 typedef void (^MGLBatchedOfflinePackAdditionCompletionHandler)(NSURL *fileURL, NSArray<MGLOfflinePack *> * _Nullable packs, NSError * _Nullable error);
 
 /**
+A block to be called once the data  has been preloaded.
+
+ @param url The URL of the data that was pre-loaded.
+ @param error Contains a pointer to an error object (if any) indicating why the
+ data could not be pre-loaded.
+*/
+typedef void (^MGLOfflinePreloadDataCompletionHandler)(NSURL * url, NSError * _Nullable error);
+
+/**
  The type of resource that is requested.
  */
 typedef NS_ENUM(NSUInteger, MGLResourceKind) {
@@ -179,9 +179,14 @@ typedef NS_ENUM(NSUInteger, MGLResourceKind) {
 
 /**
  MGLOfflineStorage implements a singleton (shared object) that manages offline
- packs. All of this class’s instance methods are asynchronous, reflecting the
- fact that offline resources are stored in a database. The shared object
- maintains a canonical collection of offline packs in its `packs` property.
+ packs and ambient caching. All of this class’s instance methods are asynchronous,
+ reflecting the fact that offline resources are stored in a database. The shared
+ object maintains a canonical collection of offline packs in its `packs` property.
+
+ Mapbox resources downloaded via this API are subject to separate Vector Tile and
+ Raster Tile API pricing and are not included in the Maps SDK’s “unlimited” requests.
+ See <a href="https://www.mapbox.com/pricing/">our pricing page</a> for more
+ information.
  
  #### Related examples
  See the <a href="https://docs.mapbox.com/ios/maps/examples/offline-pack/">
@@ -196,42 +201,6 @@ MGL_EXPORT
  */
 @property (class, nonatomic, readonly) MGLOfflineStorage *sharedOfflineStorage;
 
-#pragma mark - Adding Contents of File
-
-/**
- Adds the offline packs located at the given file path to offline storage.
- 
- The file must be a valid offline region database bundled with the application
- or downloaded separately.
- 
- The resulting packs are added or updated to the shared offline storage object’s `packs`
- property, then the `completion` block is executed.
- 
- @param filePath A string representation of the file path. The file path must be
- writable as schema updates may be perfomed.
- @param completion The completion handler to call once the contents of the given
- file has been added to offline storage. This handler is executed asynchronously
- on the main queue.
- */
-- (void)addContentsOfFile:(NSString *)filePath withCompletionHandler:(nullable MGLBatchedOfflinePackAdditionCompletionHandler)completion;
-
-/**
- Adds the offline packs located at the given URL to offline storage.
- 
- The file must be a valid offline region database bundled with the application
- or downloaded separately.
- 
- The resulting packs are added or updated to the shared offline storage object’s `packs`
- property, then the `completion` block is executed.
- 
- @param fileURL A file URL specifying the file to add. URL should be a valid system path.
- The file URL must be writable as schema updates may be performed.
- @param completion The completion handler to call once the contents of the given
- file has been added to offline storage. This handler is executed asynchronously
- on the main queue.
- */
-- (void)addContentsOfURL:(NSURL *)fileURL withCompletionHandler:(nullable MGLBatchedOfflinePackAdditionCompletionHandler)completion;
-
 #pragma mark - Accessing the Delegate
 
 /**
@@ -243,6 +212,60 @@ MGL_EXPORT
  or endpoints.
  */
 @property(nonatomic, weak, nullable) IBOutlet id<MGLOfflineStorageDelegate> delegate;
+
+#pragma mark - Managing the Database of Offline Packs
+
+/**
+ The file path at which offline packs and the ambient cache are stored.
+ 
+ To customize this path, specify the
+ [`MGLOfflineStorageDatabasePath`](../infoplist-keys.html#mglofflinestoragedatabasepath)
+ key in Info.plist.
+ */
+@property (nonatomic, readonly, copy) NSString *databasePath;
+
+/**
+ The file URL at which offline packs and the ambient cache are stored.
+ 
+ To customize this path, specify the
+ [`MGLOfflineStorageDatabasePath`](../infoplist-keys.html#mglofflinestoragedatabasepath)
+ key in Info.plist.
+ */
+@property (nonatomic, readonly, copy) NSURL *databaseURL;
+
+/**
+ Adds the offline packs located at the given file path to offline storage.
+ 
+ The file must be a valid offline pack database bundled with the application or
+ downloaded separately.
+ 
+ The resulting packs are added or updated to the shared offline storage object’s
+ `packs` property, then the `completion` block is executed.
+ 
+ @param filePath A string representation of the file path. The file path must be
+    writable as schema updates may be perfomed.
+ @param completion The completion handler to call once the contents of the given
+    file has been added to offline storage. This handler is executed
+    asynchronously on the main queue.
+ */
+- (void)addContentsOfFile:(NSString *)filePath withCompletionHandler:(nullable MGLBatchedOfflinePackAdditionCompletionHandler)completion;
+
+/**
+ Adds the offline packs located at the given URL to offline storage.
+ 
+ The file must be a valid offline pack database bundled with the application or
+ downloaded separately.
+ 
+ The resulting packs are added or updated to the shared offline storage object’s
+ `packs` property, then the `completion` block is executed.
+ 
+ @param fileURL A file URL specifying the file to add. The URL should be a valid
+    system path. The URL must be writable as schema updates may be performed.
+ @param completion The completion handler to call once the contents of the given
+    file has been added to offline storage. This handler is executed
+    asynchronously on the main queue.
+ */
+- (void)addContentsOfURL:(NSURL *)fileURL withCompletionHandler:(nullable MGLBatchedOfflinePackAdditionCompletionHandler)completion;
 
 #pragma mark - Managing Offline Packs
 
@@ -312,6 +335,21 @@ MGL_EXPORT
 - (void)removePack:(MGLOfflinePack *)pack withCompletionHandler:(nullable MGLOfflinePackRemovalCompletionHandler)completion;
 
 /**
+ Invalidates the specified offline pack. This method checks that the tiles
+ in the specified offline pack match those from the server. Local tiles that
+ do not match the latest version on the server are updated.
+ 
+ This is more efficient than deleting the offline pack and downloading it
+ again. If the data stored locally matches that on the server, new data will
+ not be downloaded.
+ 
+ @param pack The offline pack to be invalidated.
+ @param completion The completion handler to call once the pack has been
+ removed. This handler is executed asynchronously on the main queue.
+ */
+
+- (void)invalidatePack:(MGLOfflinePack *)pack withCompletionHandler:(void (^)(NSError * _Nullable))completion;
+/**
  Forcibly, asynchronously reloads the `packs` property. At some point after this
  method is called, the pointer values of the `MGLOfflinePack` objects in the
  `packs` property change, even if the underlying data for these packs has not
@@ -335,9 +373,7 @@ MGL_EXPORT
  attempt to download additional tiles until already downloaded tiles are removed
  by calling the `-removePack:withCompletionHandler:` method.
 
- @note The <a href="https://www.mapbox.com/tos/">Mapbox Terms of Service</a>
-    prohibits changing or bypassing this limit without permission from Mapbox.
-    Contact your Mapbox sales representative to have the limit raised.
+ @param maximumCount The maximum number of tiles allowed to be downloaded.
  */
 - (void)setMaximumAllowedMapboxTiles:(uint64_t)maximumCount;
 
@@ -349,7 +385,68 @@ MGL_EXPORT
  */
 @property (nonatomic, readonly) unsigned long long countOfBytesCompleted;
 
-/*
+#pragma mark - Managing the Ambient Cache
+
+/**
+ Sets the maximum ambient cache size in bytes. The default maximum cache
+ size is 50 MB. To disable ambient caching, set the maximum ambient cache size
+ to `0`. Setting the maximum ambient cache size does not impact the maximum size
+ of offline packs.
+ 
+ This method does not limit the space available to offline packs, and data in
+ offline packs does not count towards this limit. If you set the maximum ambient
+ cache size to 30 MB then download 20 MB of offline packs, 30 MB will remain
+ available for the ambient cache.
+ 
+ This method should be called before the map and map style have been loaded.
+ 
+ This method is potentially expensive, as the database will trim cached data
+ in order to prevent the ambient cache from being larger than the
+ specified amount.
+ 
+ @param cacheSize The maximum size in bytes for the ambient cache.
+ @param completion The completion handler to call once the maximum ambient cache
+    size has been set. This handler is executed synchronously on the main queue.
+ */
+- (void)setMaximumAmbientCacheSize:(NSUInteger)cacheSize withCompletionHandler:(void (^)(NSError *_Nullable error))completion;
+
+/**
+ Invalidates the ambient cache. This method checks that the tiles in the
+ ambient cache match those from the server. If the local tiles do not match
+ those on the server, they are re-downloaded.
+ 
+ This is recommended over clearing the cache or resetting the database
+ because valid local tiles will not be downloaded again.
+ 
+ Resources shared with offline packs will not be affected by this method.
+ 
+ @param completion The completion handler to call once the ambient cache has
+    been revalidated. This handler is executed asynchronously on the main queue.
+ */
+- (void)invalidateAmbientCacheWithCompletionHandler:(void (^)(NSError *_Nullable error))completion;
+
+/**
+ Clears the ambient cache by deleting resources. This method does not affect
+ resources shared with offline regions.
+ 
+ @param completion The completion handler to call once resources from the
+    ambient cache have been cleared. This handler is executed asynchronously on
+    the main queue.
+ */
+
+- (void)clearAmbientCacheWithCompletionHandler:(void (^)(NSError *_Nullable error))completion;
+/**
+ Deletes the existing database, which includes both the ambient cache and
+ offline packs, then reinitializes it.
+ 
+ You typically do not need to call this method.
+ 
+ @param completion The completion handler to call once the pack has database has
+ been reset. This handler is executed asynchronously on the main queue.
+ */
+- (void)resetDatabaseWithCompletionHandler:(void (^)(NSError *_Nullable error))completion;
+
+/**
  Inserts the provided resource into the ambient cache.
  
  This method mimics the caching that would take place if the equivalent resource
@@ -359,7 +456,10 @@ MGL_EXPORT
  This method is asynchronous; the data may not be immediately available for
  in-progress requests, though subsequent requests should have access to the
  cached data.
- 
+
+ To find out when the resource is ready to retrieve from the cache, use the `-preloadData:forURL:modificationDate:expirationDate:eTag:mustRevalidate:completionHandler:`
+ method.
+
  @param data Response data to store for this resource. The data is expected to
     be uncompressed; internally, the cache will compress data as necessary.
  @param url The URL at which the data can normally be found.
@@ -372,6 +472,31 @@ MGL_EXPORT
 - (void)preloadData:(NSData *)data forURL:(NSURL *)url modificationDate:(nullable NSDate *)modified expirationDate:(nullable NSDate *)expires eTag:(nullable NSString *)eTag mustRevalidate:(BOOL)mustRevalidate NS_SWIFT_NAME(preload(_:for:modifiedOn:expiresOn:eTag:mustRevalidate:));
 
 - (void)putResourceWithUrl:(NSURL *)url data:(NSData *)data modified:(nullable NSDate *)modified expires:(nullable NSDate *)expires etag:(nullable NSString *)etag mustRevalidate:(BOOL)mustRevalidate __attribute__((deprecated("", "-preloadData:forURL:modificationDate:expirationDate:eTag:mustRevalidate:")));
+
+/**
+ Inserts the provided resource into the ambient cache, calling a completion
+ handler when finished.
+
+ This method is asynchronous. The data is available for in-progress requests as
+ soon as the completion handler is called.
+
+ This method is asynchronous; the data may not be immediately available for
+ in-progress requests, though subsequent requests should have access to the
+ cached data.
+
+ @param data Response data to store for this resource. The data is expected to
+    be uncompressed; internally, the cache will compress data as necessary.
+ @param url The URL at which the data can normally be found.
+ @param modified The date the resource was last modified.
+ @param expires The date after which the resource is no longer valid.
+ @param eTag An HTTP entity tag.
+ @param mustRevalidate A Boolean value indicating whether the data is still
+    usable past the expiration date.
+ @param completion The completion handler to call once the data has been
+    preloaded. This handler is executed asynchronously on the main queue.
+*/
+- (void)preloadData:(NSData *)data forURL:(NSURL *)url modificationDate:(nullable NSDate *)modified expirationDate:(nullable NSDate *)expires eTag:(nullable NSString *)eTag mustRevalidate:(BOOL)mustRevalidate
+    completionHandler:(nullable MGLOfflinePreloadDataCompletionHandler)completion;
 
 @end
 

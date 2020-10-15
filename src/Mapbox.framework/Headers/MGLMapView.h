@@ -1,10 +1,12 @@
-#import "MGLGeometry.h"
-#import "MGLMapCamera.h"
-
 #import <UIKit/UIKit.h>
 
+#import "MGLCompassButton.h"
 #import "MGLFoundation.h"
+#import "MGLGeometry.h"
+#import "MGLMapCamera.h"
 #import "MGLTypes.h"
+#import "MGLStyle.h"
+#import "MGLObserver.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -14,7 +16,6 @@ NS_ASSUME_NONNULL_BEGIN
 @class MGLPolyline;
 @class MGLPolygon;
 @class MGLShape;
-@class MGLStyle;
 
 @protocol MGLMapViewDelegate;
 @protocol MGLAnnotation;
@@ -105,6 +106,15 @@ typedef NS_ENUM(NSUInteger, MGLUserTrackingMode) {
     MGLUserTrackingModeFollowWithCourse,
 };
 
+typedef NS_ENUM(NSUInteger, MGLPanScrollingMode) {
+    /** The map allows the user to only scroll horizontally. */
+    MGLPanScrollingModeHorizontal               = 0,
+    /** The map allows the user to only scroll vertically. */
+    MGLPanScrollingModeVertical,
+    /** The map allows the user to scroll both horizontally and vertically. */
+    MGLPanScrollingModeDefault
+};
+
 /** Options for `MGLMapView.preferredFramesPerSecond`. */
 typedef NSInteger MGLMapViewPreferredFramesPerSecond NS_TYPED_EXTENSIBLE_ENUM;
 
@@ -122,7 +132,6 @@ FOUNDATION_EXTERN MGL_EXPORT const MGLMapViewPreferredFramesPerSecond MGLMapView
 
 FOUNDATION_EXTERN MGL_EXPORT MGLExceptionName const MGLMissingLocationServicesUsageDescriptionException;
 FOUNDATION_EXTERN MGL_EXPORT MGLExceptionName const MGLUserLocationAnnotationTypeException;
-FOUNDATION_EXTERN MGL_EXPORT MGLExceptionName const MGLResourceNotFoundException;
 
 /**
  An interactive, customizable map view with an interface similar to the one
@@ -180,7 +189,7 @@ FOUNDATION_EXTERN MGL_EXPORT MGLExceptionName const MGLResourceNotFoundException
  Simple map view</a> example to learn how to initialize a basic `MGLMapView`.
  */
 MGL_EXPORT
-@interface MGLMapView : UIView
+@interface MGLMapView : UIView <MGLStylable, MGLObservable>
 
 #pragma mark Creating Instances
 
@@ -199,7 +208,7 @@ MGL_EXPORT
 
  @param frame The frame for the view, measured in points.
  @param styleURL URL of the map style to display. The URL may be a full HTTP
-    or HTTPS URL, a Mapbox URL indicating the style’s map ID
+    or HTTPS URL, a Mapbox style URL
     (`mapbox://styles/{user}/{style}`), or a path to a local file relative
     to the application’s resource path. Specify `nil` for the default style.
  @return An initialized map view.
@@ -253,13 +262,11 @@ MGL_EXPORT
  */
 @property (nonatomic, readonly, nullable) MGLStyle *style;
 
-@property (nonatomic, readonly) NSArray<NSURL *> *bundledStyleURLs __attribute__((unavailable("Call the relevant class method of MGLStyle for the URL of a particular default style.")));
-
 /**
  URL of the style currently displayed in the receiver.
 
- The URL may be a full HTTP or HTTPS URL, a Mapbox URL indicating the style’s
- map ID (`mapbox://styles/{user}/{style}`), or a path to a local file
+ The URL may be a full HTTP or HTTPS URL, a Mapbox
+ style URL (`mapbox://styles/{user}/{style}`), or a path to a local file
  relative to the application’s resource path.
 
  If you set this property to `nil`, the receiver will use the default style
@@ -290,11 +297,29 @@ MGL_EXPORT
 - (IBAction)reloadStyle:(nullable id)sender;
 
 /**
+ A boolean value that indicates if whether the map view should automatically
+ adjust its content insets.
+ 
+ When this property is set to `YES` the map automatically updates its
+ `contentInset` property to account for any area not covered by navigation bars,
+ tab bars, toolbars, and other ancestors that obscure the map view.
+ 
+ */
+@property (assign) BOOL automaticallyAdjustsContentInset;
+
+/**
  A Boolean value indicating whether the map may display scale information.
 
- The scale bar may not be shown at all zoom levels. The view controlled by this
- property is available at `scaleBar`. The default value of this property is
- `NO`.
+ The scale bar may not be shown at all zoom levels. The scale bar becomes visible
+ when the maximum distance visible on the map view is less than 400 miles (800
+ kilometers). The zoom level where this occurs depends on the latitude at the map
+ view’s center coordinate, as well as the device screen width. At latitudes
+ farther from the equator, the scale bar becomes visible at lower zoom levels.
+
+ The unit of measurement is determined by the user's device locale.
+
+ The view controlled by this property is available at `scaleBar`. The default value
+ of this property is `NO`.
  */
 @property (nonatomic, assign) BOOL showsScale;
 
@@ -318,7 +343,7 @@ MGL_EXPORT
  A control indicating the map’s direction and allowing the user to manipulate
  the direction, positioned in the upper-right corner.
  */
-@property (nonatomic, readonly) UIImageView *compassView;
+@property (nonatomic, readonly) MGLCompassButton *compassView;
 
 /**
  The position of the compass view. The default value is `MGLOrnamentPositionTopRight`.
@@ -331,12 +356,12 @@ MGL_EXPORT
 @property (nonatomic, assign) CGPoint compassViewMargins;
 
 /**
- The Mapbox logo, positioned in the lower-left corner.
+ The Mapbox wordmark, positioned in the lower-left corner.
 
  @note The Mapbox terms of service, which governs the use of Mapbox-hosted
     vector tiles and styles,
     <a href="https://docs.mapbox.com/help/how-mapbox-works/attribution/">requires</a> most Mapbox
-    customers to display the Mapbox logo. If this applies to you, do not
+    customers to display the Mapbox wordmark. If this applies to you, do not
     hide this view or change its contents.
  */
 @property (nonatomic, readonly) UIImageView *logoView;
@@ -411,6 +436,21 @@ MGL_EXPORT
  */
 @property (nonatomic, assign) MGLMapViewPreferredFramesPerSecond preferredFramesPerSecond;
 
+
+/**
+ :nodoc:
+ Whether map rendering should occur during the `UIApplicationStateInactive` state.
+
+ The default value of this property is `YES`. This matches the behavior of SDKs
+ pre 6.2.0.
+
+ This property is ignored for map views where background rendering is permitted.
+
+ This property should be considered undocumented, and prone to change.
+ */
+@property (nonatomic, assign) BOOL renderingInInactiveStateEnabled;
+
+
 /**
  A Boolean value indicating whether the map should prefetch tiles.
  
@@ -422,14 +462,6 @@ MGL_EXPORT
  The default value of this property is `YES`.
  */
 @property (nonatomic, assign) BOOL prefetchesTiles;
-
-@property (nonatomic) NSArray<NSString *> *styleClasses __attribute__((unavailable("Support for style classes has been removed.")));
-
-- (BOOL)hasStyleClass:(NSString *)styleClass __attribute__((unavailable("Support for style classes has been removed.")));
-
-- (void)addStyleClass:(NSString *)styleClass __attribute__((unavailable("Support for style classes has been removed.")));
-
-- (void)removeStyleClass:(NSString *)styleClass __attribute__((unavailable("Support for style classes has been removed.")));
 
 #pragma mark Displaying the User’s Location
 
@@ -503,7 +535,10 @@ MGL_EXPORT
 @property (nonatomic, assign) MGLUserTrackingMode userTrackingMode;
 
 /**
- Sets the mode used to track the user location, with an optional transition.
+ Deprecated. Sets the mode used to track the user location, with an optional transition.
+ 
+ To specify a completion handler to execute after the animation finishes, use
+ the `-setUserTrackingMode:animated:completionHandler:` method.
 
  @param mode The mode used to track the user location.
  @param animated If `YES`, there is an animated transition from the current
@@ -512,7 +547,21 @@ MGL_EXPORT
     affects the initial transition; subsequent changes to the user location or
     heading are always animated.
  */
-- (void)setUserTrackingMode:(MGLUserTrackingMode)mode animated:(BOOL)animated;
+- (void)setUserTrackingMode:(MGLUserTrackingMode)mode animated:(BOOL)animated __attribute__((deprecated("Use `-setUserTrackingMode:animated:completionHandler:` instead.")));
+
+/**
+ Sets the mode used to track the user location, with an optional transition and
+ completion handler.
+
+ @param mode The mode used to track the user location.
+ @param animated If `YES`, there is an animated transition from the current
+    viewport to a viewport that results from the change to `mode`. If `NO`, the
+    map view instantaneously changes to the new viewport. This parameter only
+    affects the initial transition; subsequent changes to the user location or
+    heading are always animated.
+ @param completion The block executed after the animation finishes.
+ */
+- (void)setUserTrackingMode:(MGLUserTrackingMode)mode animated:(BOOL)animated completionHandler:(nullable void (^)(void))completion;
 
 /**
  The vertical alignment of the user location annotation within the receiver. The
@@ -592,8 +641,32 @@ MGL_EXPORT
 @property (nonatomic, assign) CLLocationCoordinate2D targetCoordinate;
 
 /**
+ Deprecated. Sets the geographic coordinate that is the subject of observation as
+ the user location is being tracked, with an optional transition animation.
+
+ By default, the target coordinate is set to an invalid coordinate, indicating
+ that there is no target. In course tracking mode, the target forms one of two
+ foci in the viewport, the other being the user location annotation. Typically,
+ the target is set to a destination or waypoint in a real-time navigation scene.
+ As the user annotation moves toward the target, the map automatically zooms in
+ to fit both foci optimally within the viewport.
+
+ This method has no effect if the `userTrackingMode` property is set to a value
+ other than `MGLUserTrackingModeFollowWithCourse`.
+ 
+ To specify a completion handler to execute after the animation finishes, use
+ the `-setTargetCoordinate:animated:completionHandler:` method.
+
+ @param targetCoordinate The target coordinate to fit within the viewport.
+ @param animated If `YES`, the map animates to fit the target within the map
+    view. If `NO`, the map fits the target instantaneously.
+ */
+- (void)setTargetCoordinate:(CLLocationCoordinate2D)targetCoordinate animated:(BOOL)animated __attribute__((deprecated("Use `-setTargetCoordinate:animated:completionHandler:` instead.")));
+
+/**
  Sets the geographic coordinate that is the subject of observation as the user
- location is being tracked, with an optional transition animation.
+ location is being tracked, with an optional transition animation and completion
+ handler.
 
  By default, the target coordinate is set to an invalid coordinate, indicating
  that there is no target. In course tracking mode, the target forms one of two
@@ -608,8 +681,9 @@ MGL_EXPORT
  @param targetCoordinate The target coordinate to fit within the viewport.
  @param animated If `YES`, the map animates to fit the target within the map
     view. If `NO`, the map fits the target instantaneously.
+ @param completion The block executed after the animation finishes.
  */
-- (void)setTargetCoordinate:(CLLocationCoordinate2D)targetCoordinate animated:(BOOL)animated;
+- (void)setTargetCoordinate:(CLLocationCoordinate2D)targetCoordinate animated:(BOOL)animated completionHandler:(nullable void (^)(void))completion;
 
 #pragma mark Configuring How the User Interacts with the Map
 
@@ -641,6 +715,20 @@ MGL_EXPORT
 @property(nonatomic, getter=isScrollEnabled) BOOL scrollEnabled;
 
 /**
+ The scrolling mode the user is allowed to use to interact with the map.
+
+`MGLPanScrollingModeHorizontal` only allows the user to scroll horizontally on the map,
+ restricting a user's ability to scroll vertically.
+`MGLPanScrollingModeVertical` only allows the user to scroll vertically on the map,
+ restricting a user's ability to scroll horizontally.
+ `MGLPanScrollingModeDefault` allows the user to scroll both horizontally and vertically
+ on the map.
+
+ By default, this property is set to `MGLPanScrollingModeDefault`.
+ */
+@property (nonatomic, assign) MGLPanScrollingMode panScrollingMode;
+
+/**
  A Boolean value that determines whether the user may rotate the map,
  changing the direction.
 
@@ -668,6 +756,11 @@ MGL_EXPORT
  */
 @property(nonatomic, getter=isPitchEnabled) BOOL pitchEnabled;
 
+/**
+ A Boolean value that determines whether gestures are anchored to the center coordinate of the map while rotating or zooming.
+ Default value is set to NO.
+ */
+@property(nonatomic) BOOL anchorRotateOrZoomGesturesToCenterCoordinate;
 /**
  A Boolean value that determines whether the user will receive haptic feedback
  for certain interactions with the map.
@@ -710,7 +803,8 @@ MGL_EXPORT
  Changes the center coordinate of the map and optionally animates the change.
 
  Changing the center coordinate centers the map on the new coordinate without
- changing the current zoom level.
+ changing the current zoom level. For animated changes, wait until the map view has 
+ finished loading before calling this method.
 
  @param coordinate The new center coordinate for the map.
  @param animated Specify `YES` if you want the map view to scroll to the new
@@ -724,7 +818,8 @@ MGL_EXPORT
 
 /**
  Changes the center coordinate and zoom level of the map and optionally animates
- the change.
+ the change. For animated changes, wait until the map view has 
+ finished loading before calling this method.
 
  @param centerCoordinate The new center coordinate for the map.
  @param zoomLevel The new zoom level for the map.
@@ -739,7 +834,8 @@ MGL_EXPORT
 
 /**
  Changes the center coordinate, zoom level, and direction of the map and
- optionally animates the change.
+ optionally animates the change. For animated changes, wait until the map view has 
+ finished loading before calling this method.
 
  @param centerCoordinate The new center coordinate for the map.
  @param zoomLevel The new zoom level for the map.
@@ -756,7 +852,8 @@ MGL_EXPORT
 
 /**
  Changes the center coordinate, zoom level, and direction of the map, calling a
- completion handler at the end of an optional animation.
+ completion handler at the end of an optional animation. For animated changes, 
+ wait until the map view has finished loading before calling this method.
 
  @param centerCoordinate The new center coordinate for the map.
  @param zoomLevel The new zoom level for the map.
@@ -850,6 +947,29 @@ MGL_EXPORT
 - (void)setDirection:(CLLocationDirection)direction animated:(BOOL)animated;
 
 /**
+ The minimum pitch of the map’s camera toward the horizon measured in degrees.
+
+ If the value of this property is greater than that of the `maximumPitch`
+ property, the behavior is undefined. The pitch may not be less than 0
+ regardless of this property.
+
+ The default value of this property is 0 degrees, allowing the map to appear
+ two-dimensional.
+ */
+@property (nonatomic) CGFloat minimumPitch;
+
+/**
+ The maximum pitch of the map’s camera toward the horizon measured in degrees.
+
+ If the value of this property is smaller than that of the `minimumPitch`
+ property, the behavior is undefined. The pitch may not exceed 60 degrees
+ regardless of this property.
+
+ The default value of this property is 60 degrees.
+ */
+@property (nonatomic) CGFloat maximumPitch;
+
+/**
  Resets the map rotation to a northern heading — a `direction` of `0` degrees.
  */
 - (IBAction)resetNorth;
@@ -892,8 +1012,28 @@ MGL_EXPORT
 - (void)setVisibleCoordinateBounds:(MGLCoordinateBounds)bounds animated:(BOOL)animated;
 
 /**
- Changes the receiver’s viewport to fit the given coordinate bounds and
- optionally some additional padding on each side.
+ Deprecated. Changes the receiver’s viewport to fit the given coordinate bounds with
+ some additional padding on each side.
+
+ To bring both sides of the antimeridian or international date line into view,
+ specify some longitudes less than −180 degrees or greater than 180 degrees. For
+ example, to show both Tokyo and San Francisco simultaneously, you could set the
+ visible bounds to extend from (35.68476, −220.24257) to (37.78428, −122.41310).
+ 
+ To specify a completion handler to execute after the animation finishes, use
+ the `-setVisibleCoordinateBounds:edgePadding:animated:completionHandler:` method.
+
+ @param bounds The bounds that the viewport will show in its entirety.
+ @param insets The minimum padding (in screen points) that will be visible
+    around the given coordinate bounds.
+ @param animated Specify `YES` to animate the change by smoothly scrolling and
+    zooming or `NO` to immediately display the given bounds.
+ */
+- (void)setVisibleCoordinateBounds:(MGLCoordinateBounds)bounds edgePadding:(UIEdgeInsets)insets animated:(BOOL)animated __attribute__((deprecated("Use `-setVisibleCoordinateBounds:edgePadding:animated:completionHandler:` instead.")));
+
+/**
+ Changes the receiver’s viewport to fit the given coordinate bounds with some
+ additional padding on each side, optionally calling a completion handler.
 
  To bring both sides of the antimeridian or international date line into view,
  specify some longitudes less than −180 degrees or greater than 180 degrees. For
@@ -905,12 +1045,13 @@ MGL_EXPORT
     around the given coordinate bounds.
  @param animated Specify `YES` to animate the change by smoothly scrolling and
     zooming or `NO` to immediately display the given bounds.
+ @param completion The block executed after the animation finishes.
  */
-- (void)setVisibleCoordinateBounds:(MGLCoordinateBounds)bounds edgePadding:(UIEdgeInsets)insets animated:(BOOL)animated;
+- (void)setVisibleCoordinateBounds:(MGLCoordinateBounds)bounds edgePadding:(UIEdgeInsets)insets animated:(BOOL)animated completionHandler:(nullable void (^)(void))completion;
 
 /**
- Changes the receiver’s viewport to fit all of the given coordinates and
- optionally some additional padding on each side.
+ Changes the receiver’s viewport to fit all of the given coordinates with some
+ additional padding on each side.
 
  To bring both sides of the antimeridian or international date line into view,
  specify some longitudes less than −180 degrees or greater than 180 degrees. For
@@ -928,8 +1069,8 @@ MGL_EXPORT
 - (void)setVisibleCoordinates:(const CLLocationCoordinate2D *)coordinates count:(NSUInteger)count edgePadding:(UIEdgeInsets)insets animated:(BOOL)animated;
 
 /**
- Changes the receiver’s viewport to fit all of the given coordinates and
- optionally some additional padding on each side.
+ Changes the receiver’s viewport to fit all of the given coordinates with some
+ additional padding on each side, optionally calling a completion handler.
 
  To bring both sides of the antimeridian or international date line into view,
  specify some longitudes less than −180 degrees or greater than 180 degrees. For
@@ -965,8 +1106,27 @@ MGL_EXPORT
 - (void)showAnnotations:(NSArray<id <MGLAnnotation>> *)annotations animated:(BOOL)animated;
 
 /**
+ Deprecated. Sets the visible region so that the map displays the specified
+ annotations with the specified amount of padding on each side.
+
+ Calling this method updates the value in the `visibleCoordinateBounds` property
+ and potentially other properties to reflect the new map region.
+ 
+ To specify a completion handler to execute after the animation finishes, use
+ the `-showAnnotations:edgePadding:animated:completionHandler:` method.
+
+ @param annotations The annotations that you want to be visible in the map.
+ @param insets The minimum padding (in screen points) around the edges of the
+    map view to keep clear of annotations.
+ @param animated `YES` if you want the map region change to be animated, or `NO`
+    if you want the map to display the new region immediately without animations.
+ */
+- (void)showAnnotations:(NSArray<id <MGLAnnotation>> *)annotations edgePadding:(UIEdgeInsets)insets animated:(BOOL)animated __attribute__((deprecated("Use `-showAnnotations:edgePadding:animated:completionHandler:` instead.")));
+
+/**
  Sets the visible region so that the map displays the specified annotations with
- the specified amount of padding on each side.
+ the specified amount of padding on each side and an optional completion
+ handler.
 
  Calling this method updates the value in the `visibleCoordinateBounds` property
  and potentially other properties to reflect the new map region.
@@ -976,8 +1136,9 @@ MGL_EXPORT
     map view to keep clear of annotations.
  @param animated `YES` if you want the map region change to be animated, or `NO`
     if you want the map to display the new region immediately without animations.
+ @param completion The block executed after the animation finishes.
  */
-- (void)showAnnotations:(NSArray<id <MGLAnnotation>> *)annotations edgePadding:(UIEdgeInsets)insets animated:(BOOL)animated;
+- (void)showAnnotations:(NSArray<id <MGLAnnotation>> *)annotations edgePadding:(UIEdgeInsets)insets animated:(BOOL)animated completionHandler:(nullable void (^)(void))completion;
 
 /**
  A camera representing the current viewpoint of the map.
@@ -986,7 +1147,8 @@ MGL_EXPORT
 
 /**
  Moves the viewpoint to a different location with respect to the map with an
- optional transition animation.
+ optional transition animation. For animated changes, wait until the map view has 
+ finished loading before calling this method.
 
  @param camera The new viewpoint.
  @param animated Specify `YES` if you want the map view to animate the change to
@@ -1002,7 +1164,8 @@ MGL_EXPORT
 
 /**
  Moves the viewpoint to a different location with respect to the map with an
- optional transition duration and timing function.
+ optional transition duration and timing function. For animated changes, wait 
+ until the map view has finished loading before calling this method.
 
  @param camera The new viewpoint.
  @param duration The amount of time, measured in seconds, that the transition
@@ -1021,7 +1184,8 @@ MGL_EXPORT
 
 /**
  Moves the viewpoint to a different location with respect to the map with an
- optional transition duration and timing function.
+ optional transition duration and timing function. For animated changes, wait 
+ until the map view has finished loading before calling this method.
 
  @param camera The new viewpoint.
  @param duration The amount of time, measured in seconds, that the transition
@@ -1037,7 +1201,8 @@ MGL_EXPORT
 /**
  Moves the viewpoint to a different location with respect to the map with an
  optional transition duration and timing function, and optionally some additional
- padding on each side.
+ padding on each side. For animated changes, wait until the map view has 
+ finished loading before calling this method.
 
  @param camera The new viewpoint.
  @param duration The amount of time, measured in seconds, that the transition
@@ -1117,8 +1282,8 @@ MGL_EXPORT
 - (MGLMapCamera *)cameraThatFitsCoordinateBounds:(MGLCoordinateBounds)bounds;
 
 /**
- Returns the camera that best fits the given coordinate bounds, optionally with
- some additional padding on each side.
+ Returns the camera that best fits the given coordinate bounds with some
+ additional padding on each side.
 
  @param bounds The coordinate bounds to fit to the receiver’s viewport.
  @param insets The minimum padding (in screen points) that would be visible
@@ -1135,8 +1300,9 @@ MGL_EXPORT
 - (MGLMapCamera *)cameraThatFitsCoordinateBounds:(MGLCoordinateBounds)bounds edgePadding:(UIEdgeInsets)insets;
 
 /**
- Returns the camera that best fits the given coordinate bounds, with the specified camera,
- optionally with some additional padding on each side.
+ Returns the camera that best fits the given coordinate bounds with some
+ additional padding on each side, matching an existing camera as much as
+ possible.
 
  @param camera The camera that the return camera should adhere to. All values
     on this camera will be manipulated except for pitch and direction.
@@ -1155,8 +1321,8 @@ MGL_EXPORT
 - (MGLMapCamera *)camera:(MGLMapCamera *)camera fittingCoordinateBounds:(MGLCoordinateBounds)bounds edgePadding:(UIEdgeInsets)insets;
 
 /**
- Returns the camera that best fits the given shape, with the specified camera,
- optionally with some additional padding on each side.
+ Returns the camera that best fits the given shape with some additional padding
+ on each side, matching an existing camera as much as possible.
 
  @param camera The camera that the return camera should adhere to. All values
     on this camera will be manipulated except for pitch and direction.
@@ -1164,8 +1330,8 @@ MGL_EXPORT
  @param insets The minimum padding (in screen points) that would be visible
     around the returned camera object if it were set as the receiver’s camera.
  @return A camera object centered on the shape's center with zoom level as high
-    (close to the ground) as possible while still including the entire shape. The
-    initial camera's pitch and direction will be honored.
+    (close to the ground) as possible while still including the entire shape.
+    The initial camera's pitch and direction will be honored.
 
  @note The behavior of this method is undefined if called in response to
  `UIApplicationWillTerminateNotification`; you may receive a `nil` return value
@@ -1174,16 +1340,17 @@ MGL_EXPORT
 - (MGLMapCamera *)camera:(MGLMapCamera *)camera fittingShape:(MGLShape *)shape edgePadding:(UIEdgeInsets)insets;
 
 /**
- Returns the camera that best fits the given shape, with the specified direction,
- optionally with some additional padding on each side.
+ Returns the camera that best fits the given shape with some additional padding
+ on each side while looking in the specified direction.
 
  @param shape The shape to fit to the receiver’s viewport.
- @param direction The direction of the viewport, measured in degrees clockwise from true north.
+ @param direction The direction of the viewport, measured in degrees clockwise
+    from true north.
  @param insets The minimum padding (in screen points) that would be visible
     around the returned camera object if it were set as the receiver’s camera.
  @return A camera object centered on the shape's center with zoom level as high
-    (close to the ground) as possible while still including the entire shape. The
-    camera object uses the current pitch.
+    (close to the ground) as possible while still including the entire shape.
+    The camera object uses the current pitch.
 
  @note The behavior of this method is undefined if called in response to
  `UIApplicationWillTerminateNotification`; you may receive a `nil` return value
@@ -1192,7 +1359,7 @@ MGL_EXPORT
 - (MGLMapCamera *)cameraThatFitsShape:(MGLShape *)shape direction:(CLLocationDirection)direction edgePadding:(UIEdgeInsets)insets;
 
 /**
- Returns the point in this view’s coordinate system on which to "anchor" in
+ Returns the point in this view’s coordinate system on which to “anchor” in
  response to a user-initiated gesture.
 
  For example, a pinch-to-zoom gesture would anchor the map at the midpoint of
@@ -1219,20 +1386,23 @@ MGL_EXPORT
  view’s frame. Otherwise, those properties are inset, excluding part of the
  frame from the viewport. For instance, if the only the top edge is inset, the
  map center is effectively shifted downward.
-
+ 
  When the map view’s superview is an instance of `UIViewController` whose
  `automaticallyAdjustsScrollViewInsets` property is `YES`, the value of this
  property may be overridden at any time.
+ 
+ The usage of `automaticallyAdjustsScrollViewInsets` has been deprecated
+ use the map view’s property `MGLMapView.automaticallyAdjustsContentInset`instead.
 
  Changing the value of this property updates the map view immediately. If you
- want to animate the change, use the `-setContentInset:animated:` method
- instead.
+ want to animate the change, use the `-setContentInset:animated:completionHandler:`
+ method instead.
  */
 @property (nonatomic, assign) UIEdgeInsets contentInset;
 
 /**
- Sets the distance from the edges of the map view’s frame to the edges of the
- map view’s logical viewport with an optional transition animation.
+ Deprecated. Sets the distance from the edges of the map view’s frame to the edges
+ of the map view’s logical viewport with an optional transition animation.
 
  When the value of this property is equal to `UIEdgeInsetsZero`, viewport
  properties such as `centerCoordinate` assume a viewport that matches the map
@@ -1243,13 +1413,45 @@ MGL_EXPORT
  When the map view’s superview is an instance of `UIViewController` whose
  `automaticallyAdjustsScrollViewInsets` property is `YES`, the value of this
  property may be overridden at any time.
+ 
+ The usage of `automaticallyAdjustsScrollViewInsets` has been deprecated
+ use the map view’s property `MGLMapView.automaticallyAdjustsContentInset`instead.
+ 
+ To specify a completion handler to execute after the animation finishes, use
+ the `-setContentInset:animated:completionHandler:` method.
 
  @param contentInset The new values to inset the content by.
  @param animated Specify `YES` if you want the map view to animate the change to
     the content inset or `NO` if you want the map to inset the content
     immediately.
  */
-- (void)setContentInset:(UIEdgeInsets)contentInset animated:(BOOL)animated;
+- (void)setContentInset:(UIEdgeInsets)contentInset animated:(BOOL)animated __attribute__((deprecated("Use `-setContentInset:animated:completionHandler:` instead.")));
+
+/**
+ Sets the distance from the edges of the map view’s frame to the edges of the
+ map view’s logical viewport with an optional transition animation and
+ completion handler.
+
+ When the value of this property is equal to `UIEdgeInsetsZero`, viewport
+ properties such as `centerCoordinate` assume a viewport that matches the map
+ view’s frame. Otherwise, those properties are inset, excluding part of the
+ frame from the viewport. For instance, if the only the top edge is inset, the
+ map center is effectively shifted downward.
+
+ When the map view’s superview is an instance of `UIViewController` whose
+ `automaticallyAdjustsScrollViewInsets` property is `YES`, the value of this
+ property may be overridden at any time.
+ 
+ The usage of `automaticallyAdjustsScrollViewInsets` has been deprecated
+ use the map view’s property `MGLMapView.automaticallyAdjustsContentInset`instead.
+
+ @param contentInset The new values to inset the content by.
+ @param animated Specify `YES` if you want the map view to animate the change to
+    the content inset or `NO` if you want the map to inset the content
+    immediately.
+ @param completion The block executed after the animation finishes.
+ */
+- (void)setContentInset:(UIEdgeInsets)contentInset animated:(BOOL)animated completionHandler:(nullable void (^)(void))completion;
 
 #pragma mark Converting Geographic Coordinates
 
@@ -1331,8 +1533,6 @@ MGL_EXPORT
  @return The distance in meters spanned by a single point.
  */
 - (CLLocationDistance)metersPerPointAtLatitude:(CLLocationDegrees)latitude;
-
-- (CLLocationDistance)metersPerPixelAtLatitude:(CLLocationDegrees)latitude __attribute__((unavailable("Use -metersPerPointAtLatitude:.")));
 
 #pragma mark Annotating the Map
 
@@ -1490,7 +1690,32 @@ MGL_EXPORT
 @property (nonatomic, copy) NSArray<id <MGLAnnotation>> *selectedAnnotations;
 
 /**
- Selects an annotation and displays its callout view.
+ Deprecated. Selects an annotation and displays its callout view.
+
+ The `animated` parameter determines whether the selection is animated including whether the map is
+ panned to bring the annotation into view, specifically:
+
+ | `animated` parameter | Effect |
+ |------------------|--------|
+ | `NO`             | The annotation is selected, and the callout is presented. However the map is not panned to bring the annotation or callout into view. The presentation of the callout is NOT animated. |
+ | `YES`            | The annotation is selected, and the callout is presented. If the annotation is not visible (or is partially visible) *and* is of type `MGLPointAnnotation`, the map is panned so that the annotation and its callout are brought into view. The annotation is *not* centered within the viewport. |
+
+ Note that a selection initiated by a single tap gesture is always animated.
+ 
+ To specify a completion handler to execute after the animation finishes, use
+ the `-selectAnnotation:animated:completionHandler:` method.
+
+ @param annotation The annotation object to select.
+ @param animated If `YES`, the annotation and callout view are animated on-screen.
+
+ @note In versions prior to `4.0.0` selecting an offscreen annotation did not
+ change the camera.
+ */
+- (void)selectAnnotation:(id <MGLAnnotation>)annotation animated:(BOOL)animated __attribute__((deprecated("Use `-selectAnnotation:animated:completionHandler:` instead.")));
+
+/**
+ Selects an annotation and displays its callout view with an optional completion
+ handler.
 
  The `animated` parameter determines whether the selection is animated including whether the map is
  panned to bring the annotation into view, specifically:
@@ -1504,22 +1729,25 @@ MGL_EXPORT
 
  @param annotation The annotation object to select.
  @param animated If `YES`, the annotation and callout view are animated on-screen.
+ @param completion The block executed after the animation finishes.
 
  @note In versions prior to `4.0.0` selecting an offscreen annotation did not
  change the camera.
  */
-- (void)selectAnnotation:(id <MGLAnnotation>)annotation animated:(BOOL)animated;
+- (void)selectAnnotation:(id <MGLAnnotation>)annotation animated:(BOOL)animated completionHandler:(nullable void (^)(void))completion;
 
 /**
  :nodoc:
- Selects an annotation and displays its callout view. This method should be
- considered "alpha" and as such is liable to change.
+ Selects an annotation and displays its callout view with an optional completion
+ handler. This method should be considered "alpha" and as such is subject to
+ change.
 
  @param annotation The annotation object to select.
- @param moveIntoView If the annotation is not visible (or is partially visible) *and* is of type `MGLPointAnnotation`, the map is panned so that the annotation and its callout are brought into view. The annotation is *not* centered within the viewport. |
+ @param moveIntoView If the annotation is not visible (or is partially visible) *and* is of type `MGLPointAnnotation`, the map is panned so that the annotation and its callout are brought into view. The annotation is *not* centered within the viewport.
  @param animateSelection If `YES`, the annotation's selection state and callout view's presentation are animated.
+ @param completion The block executed after the animation finishes.
  */
-- (void)selectAnnotation:(id <MGLAnnotation>)annotation moveIntoView:(BOOL)moveIntoView animateSelection:(BOOL)animateSelection;
+- (void)selectAnnotation:(id <MGLAnnotation>)annotation moveIntoView:(BOOL)moveIntoView animateSelection:(BOOL)animateSelection completionHandler:(nullable void (^)(void))completion;
 
 /**
  Deselects an annotation and hides its callout view.
@@ -1802,12 +2030,13 @@ MGL_EXPORT
  */
 @property (nonatomic) MGLMapDebugMaskOptions debugMask;
 
-@property (nonatomic, getter=isDebugActive) BOOL debugActive __attribute__((unavailable("Use -debugMask and -setDebugMask:.")));
-
-- (void)toggleDebug __attribute__((unavailable("Use -setDebugMask:.")));
-
-- (void)emptyMemoryCache __attribute__((unavailable));
-
+/**
+ :nodoc:
+ Convenience method for subscribing to a single event. See `-[MGLObservable
+ subscribeForObserver:events:]`.
+ */
+- (void)subscribeForObserver:(nonnull MGLObserver *)observer
+                       event:(nonnull MGLEventType)event;
 @end
 
 NS_ASSUME_NONNULL_END

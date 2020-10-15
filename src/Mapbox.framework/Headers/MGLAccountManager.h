@@ -34,9 +34,7 @@ MGL_EXPORT
     and the type `String`. Alternatively, you may call this method from your
     application delegate’s `-applicationDidFinishLaunching:` method.
  */
-@property (class, nullable) NSString *accessToken;
-
-+ (BOOL)mapboxMetricsEnabledSettingShownInApp __attribute__((unavailable("Telemetry settings are now always shown in the ℹ️ menu.")));
+@property (class, copy, nullable) NSString *accessToken;
 
 @end
 

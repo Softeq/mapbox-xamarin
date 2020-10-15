@@ -94,8 +94,6 @@ MGL_EXPORT
  */
 + (NSURL *)streetsStyleURLWithVersion:(NSInteger)version;
 
-+ (NSURL *)emeraldStyleURL __attribute__((unavailable("Create an NSURL object with the string “mapbox://styles/mapbox/emerald-v8”.")));
-
 /**
  Returns the URL to the current version of the
  <a href="https://www.mapbox.com/maps/outdoors/">Mapbox Outdoors</a> style as of
@@ -201,9 +199,6 @@ MGL_EXPORT
  */
 + (NSURL *)satelliteStyleURLWithVersion:(NSInteger)version;
 
-
-+ (NSURL *)hybridStyleURL __attribute__((unavailable("Use -satelliteStreetsStyleURL.")));
-
 /**
  Returns the URL to the current version of the
  <a href="https://www.mapbox.com/maps/satellite/">Mapbox Satellite Streets</a>
@@ -239,15 +234,6 @@ MGL_EXPORT
  */
 + (NSURL *)satelliteStreetsStyleURLWithVersion:(NSInteger)version;
 
-
-+ (NSURL *)trafficDayStyleURL __attribute__((unavailable("Create an NSURL object with the string “mapbox://styles/mapbox/traffic-day-v2”.")));
-
-+ (NSURL *)trafficDayStyleURLWithVersion:(NSInteger)version __attribute__((unavailable("Create an NSURL object with the string “mapbox://styles/mapbox/traffic-day-v2”.")));;
-
-+ (NSURL *)trafficNightStyleURL __attribute__((unavailable("Create an NSURL object with the string “mapbox://styles/mapbox/traffic-night-v2”.")));
-
-+ (NSURL *)trafficNightStyleURLWithVersion:(NSInteger)version __attribute__((unavailable("Create an NSURL object with the string “mapbox://styles/mapbox/traffic-night-v2”.")));
-
 #pragma mark Accessing Metadata About the Style
 
 /**
@@ -256,6 +242,7 @@ MGL_EXPORT
  You can customize the style’s name in Mapbox Studio.
  */
 @property (readonly, copy, nullable) NSString *name;
+
 
 #pragma mark Managing Sources
 
@@ -276,6 +263,13 @@ MGL_EXPORT
  The default value of this property is `YES`.
  */
 @property (nonatomic, assign) BOOL performsPlacementTransitions;
+
+/**
+A set containing user-specified source layer identifiers for point features available for accessibility. The features should have a `MGLVectorTileSource` and belong to a source layer. The point features must have a `name` attribute that matches those specified by <a href="https://www.mapbox.com/vector-tiles/mapbox-streets-v8/#overview">Mapbox Streets</a> source and belong to a `MGLVectorStyleLayer`.
+ 
+This set does not include Mapbox Streets source identifiers, which are included by default.
+*/
+@property (nonatomic) NSSet <NSString *> *accessiblePlaceSourceLayerIdentifiers;
 
 /**
  Returns a source with the given identifier in the current style.
@@ -344,7 +338,6 @@ MGL_EXPORT
  an `NSError` object describing the problem.
  */
 - (BOOL)removeSource:(MGLSource *)source error:(NSError * __nullable * __nullable)outError;
-
 
 #pragma mark Managing Style Layers
 
@@ -473,17 +466,6 @@ MGL_EXPORT
  */
 - (void)removeLayer:(MGLStyleLayer *)layer;
 
-#pragma mark Managing Style Classes
-
-
-@property (nonatomic) NSArray<NSString *> *styleClasses __attribute__((unavailable("Support for style classes has been removed.")));
-
-- (BOOL)hasStyleClass:(NSString *)styleClass __attribute__((unavailable("Support for style classes has been removed.")));
-
-- (void)addStyleClass:(NSString *)styleClass __attribute__((unavailable("Support for style classes has been removed.")));
-
-- (void)removeStyleClass:(NSString *)styleClass __attribute__((unavailable("Support for style classes has been removed.")));
-
 #pragma mark Managing a Style’s Images
 
 /**
@@ -562,7 +544,25 @@ MGL_EXPORT
  */
 - (void)localizeLabelsIntoLocale:(nullable NSLocale *)locale;
 
-@property (nonatomic) BOOL localizesLabels __attribute__((unavailable("Use -localizeLabelsIntoLocale: instead.")));
+@end
+
+/**
+ An object whose contents are represented by an `MGLStyle` object that you
+ configure.
+ */
+@protocol MGLStylable <NSObject>
+
+/**
+ The style currently displayed in the receiver.
+
+ @note The default styles provided by Mapbox contain sources and layers with
+    identifiers that will change over time. Applications that use APIs that
+    manipulate a style’s sources and layers must first set the style URL to an
+    explicitly versioned style using a convenience method like
+    `+[MGLStyle outdoorsStyleURLWithVersion:]` or a manually constructed
+     `NSURL`.
+ */
+@property (nonatomic, readonly, nullable) MGLStyle *style;
 
 @end
 
