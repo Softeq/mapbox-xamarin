@@ -2,9 +2,9 @@
 
 [![Build Status](https://dev.azure.com/SofteqDevelopment/mapbox-xamarin/_apis/build/status/Softeq.mapbox-xamarin?branchName=master)](https://dev.azure.com/SofteqDevelopment/mapbox-xamarin/_build/latest?definitionId=58&branchName=master)
 
-Xamarin binding library for [Mapbox GL Native](https://github.com/mapbox/mapbox-gl-native) library v5.1.1.
+Xamarin binding library for [Mapbox GL Native](https://github.com/mapbox/mapbox-gl-native-ios) library v6.2.1.
 
-![](https://github.com/mapbox/mapbox-gl-native/raw/master/platform/ios/docs/img/screenshot.png)
+![](https://docs.mapbox.com/ios/maps/api/6.2.1/img/screenshot.png)
 
 ## Basic Examples
 
