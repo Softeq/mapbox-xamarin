@@ -1150,6 +1150,16 @@ namespace MapboxBindingIOS
         // @property (nonatomic) MGLMapDebugMaskOptions debugMask;
         [Export("debugMask", ArgumentSemantic.Assign)]
         MGLMapDebugMaskOptions DebugMask { get; set; }
+        
+        // https://github.com/mapbox/mapbox-gl-native-ios/blob/7526f6b1b1cd4c574026240b650860da0a7aa590/platform/ios/src/MGLMapView.mm#L1089-L1100
+        [Export("isOpaque")]
+        bool isOpaque
+        {
+            // - (BOOL)isOpaque
+            [Bind ("isOpaque")] get;
+            // - (void)setOpaque:(BOOL)opaque
+            [Bind ("setOpaque:")] set;
+        }
     }
 
     // @interface IBAdditions (MGLMapView)
