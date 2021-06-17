@@ -1,3 +1,13 @@
+resources:
+- repo: self
+trigger:
+  branches:
+    include:
+      - '*'
+  paths:
+    exclude:
+      - README.md
+
 jobs:
 - job: macOS
   pool:
