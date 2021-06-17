@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+    <metadata>
+        <id>Softeq.Mapbox.iOS</id>
+        <version>6.2.1</version>
+        <authors>Softeq Development Corp.</authors>
+        <owners>Softeq Development Corp.</owners>
+        <requireLicenseAcceptance>false</requireLicenseAcceptance>
+        <title>Softeq - Mapbox iOS</title>
+        <summary>Xamarin binding library for Mapbox iOS SDK</summary>
+        <description>Xamarin.iOS binding library for Mapbox SDK</description>
+        <releaseNotes>New release</releaseNotes>
+        <iconUrl>https://avatars.githubusercontent.com/u/600935</iconUrl>
+        <licenseUrl>https://github.com/Softeq/mapbox-xamarin/blob/master/LICENSE</licenseUrl>
+        <projectUrl>https://github.com/Softeq/mapbox-xamarin</projectUrl>
+        <copyright>Copyright 2021 Softeq Development Corp.</copyright>
+        <tags>mapbox, maps, xamarin.ios, softeq, ios</tags>
+        <dependencies>
+            <group targetFramework="Xamarin.iOS10" />
+        </dependencies>
+    </metadata>
+    <files>
+        <file src="src/bin/Release/MapBoxBindingIOS.dll" target="lib/Xamarin.iOS10/MapBoxBindingIOS.dll" />
+    </files>
+</package>
