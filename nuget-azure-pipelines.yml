@@ -1,0 +1,17 @@
+resources:
+- repo: self
+
+jobs:
+- job: macOS
+  pool:
+    vmImage: 'macOS-latest'
+
+  steps:
+  - task: XamariniOS@2
+    displayName: 'Build Xamarin.iOS solution **/*.sln'
+    inputs:
+      solutionFile: '**/*.sln'
+      configuration: 'Release'
+      packageApp: false
+      buildForSimulator: false
+      runNugetRestore: true
