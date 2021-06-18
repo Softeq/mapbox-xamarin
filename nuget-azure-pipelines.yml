@@ -1,6 +1,8 @@
 resources:
 - repo: self
 
+trigger: none
+
 jobs:
 - job: macOS
   pool:
