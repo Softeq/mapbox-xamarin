@@ -7,14 +7,8 @@ jobs:
     vmImage: 'macOS-latest'
 
   steps:
-  - task: XamariniOS@2
-    displayName: 'Build Xamarin.iOS solution **/*.sln'
-    inputs:
-      solutionFile: '**/*.sln'
-      configuration: 'Release'
-      packageApp: false
-      buildForSimulator: false
-      runNugetRestore: true
+  - script: 'msbuild src/MapBoxBindingIOS.csproj -t:rebuild /p:Configuration=Release'
+    displayName: Build library
   - script: 'nuget pack *.nuspec -Properties Configuration=Release'
     displayName: Pack library
   - task: CopyFiles@2
