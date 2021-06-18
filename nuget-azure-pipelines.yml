@@ -15,3 +15,12 @@ jobs:
       packageApp: false
       buildForSimulator: false
       runNugetRestore: true
+  - script: 'nuget pack *.nuspec -Properties Configuration=Release'
+    displayName: Pack library
+  - task: CopyFiles@2
+    inputs:
+      contents: '*.nupkg'
+      targetFolder: $(Build.ArtifactStagingDirectory)
+  - task: PublishBuildArtifacts@1
+    inputs:
+      ArtifactName: 'drop'
