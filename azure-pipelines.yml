@@ -1,14 +1,24 @@
-pool:
-  name: Hosted macOS High Sierra
-  demands: Xamarin.iOS
+resources:
+- repo: self
+trigger:
+  branches:
+    include:
+      - '*'
+  paths:
+    exclude:
+      - README.md
 
-steps:
-- task: NuGetCommand@2
-  displayName: 'NuGet restore'
+jobs:
+- job: macOS
+  pool:
+    vmImage: 'macOS-latest'
 
-- task: XamariniOS@2
-  displayName: 'Build Xamarin.iOS solution **/*.sln'
-  inputs:
-    clean: true
-    packageApp: false
-    buildForSimulator: true
+  steps:
+  - task: XamariniOS@2
+    displayName: 'Build Xamarin.iOS solution **/*.sln'
+    inputs:
+      solutionFile: '**/*.sln'
+      configuration: 'Debug'
+      packageApp: false
+      buildForSimulator: true
+      runNugetRestore: true
