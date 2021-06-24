@@ -1,6 +1,6 @@
 # Mapbox Maps SDK for Xamarin.iOS
 
-[![Build Status](https://dev.azure.com/SofteqDevelopment/mapbox-xamarin/_apis/build/status/mapbox-xamarin-ios-dev?branchName=master)](https://dev.azure.com/SofteqDevelopment/mapbox-xamarin/_build/latest?definitionId=58&branchName=master) [![Softeq.Mapbox.iOS](https://buildstats.info/nuget/Softeq.Mapbox.iOS?includePreReleases=true)](https://www.nuget.org/packages/Softeq.Mapbox.iOS)
+[![Build Status](https://dev.azure.com/SofteqDevelopment/Xamarin.Binding.Libraries/_apis/build/status/mapbox-ios-dev?branchName=master)](https://dev.azure.com/SofteqDevelopment/Xamarin.Binding.Libraries/_build/latest?definitionId=58&branchName=master) [![Softeq.Mapbox.iOS](https://buildstats.info/nuget/Softeq.Mapbox.iOS?includePreReleases=true)](https://www.nuget.org/packages/Softeq.Mapbox.iOS)
 
 Xamarin binding library for [Mapbox GL Native](https://github.com/mapbox/mapbox-gl-native-ios) library v6.2.1.
 
@@ -40,7 +40,7 @@ We specialize in developing mobile applications using Xamarin and native technol
  - [Facebook](https://web.facebook.com/Softeq.by/)
  - [Instagram](https://www.instagram.com/softeq/)
  - [Twitter](https://twitter.com/Softeq)
- - [Vk](https://vk.com/club21079655)
+ - [VK](https://vk.com/club21079655)
 
 
 ## License
