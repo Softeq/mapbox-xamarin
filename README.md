@@ -10,7 +10,7 @@ Xamarin binding library for [Mapbox GL Native](https://github.com/mapbox/mapbox-
 
 You can either add the NuGet package:
 ```
-Install-Package Naxam.Mapbox.iOS
+Install-Package Softeq.Mapbox.iOS
 ```
 
 ## Usage
